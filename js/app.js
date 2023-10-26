@@ -1,11 +1,14 @@
 import {app, db} from "./config-firebase.js"
-import {doc, setDoc, collection, addDoc, query, where, getDocs, orderBy} from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js"
+import {doc, setDoc, collection, addDoc, query, where, getDocs, orderBy, deleteDoc} from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js"
 
 let nome = document.querySelector("#tarefa")
 let data = document.querySelector("#data")
 let status = document.querySelector("#status")
 let btnTarefa = document.querySelector("#btnTarefa")
 let bloco = document.querySelector("#bloco")
+let formCadastrar = document.querySelector("#formCadastrar")
+let formAtualizar = document.querySelector("#formAtualizar")
+let btnAtualizar = document.querySelector("#btnAtualizar")
 
 async function inserirTarefa(){
     try {
@@ -22,10 +25,11 @@ async function inserirTarefa(){
 }
 
 async function consultarTarefa(){
+    bloco.innerHTML = "" // Limpando o elemento HTML antes de inserir novos registros, para não aculular dados
     const busca = query(collection(db, "tarefa"), orderBy("name"));
 
     const resultado = await getDocs(busca);
-            resultado.forEach((item) => {
+    resultado.forEach((item) => {
   // item.data() is never undefined for query item snapshots
     console.log(item.id, " => ", item.data());
 
@@ -38,13 +42,41 @@ async function consultarTarefa(){
             </div>
 
             <div class="d-flex gap-2 justify-content-end">
-            <button type="button" class="btn btn-danger" id="excluir">Excluir</button>
-            <button type="button" class="btn btn-info" id="alterar">Alterar</button>
+            <button type="button" class="btn btn-danger" id="${item.id}">Excluir</button>
+            <button type="button" class="btn btn-info" id="${item.id}">Alterar</button>
             </div>
         </li>
     `
+    document.querySelectorAll(".btn-danger").forEach((elemento)=>{
+        elemento.addEventListener("click", (evento)=>{
+            console.log(evento.target.id)
+            excluirTarefas(evento.target.id)
+            // alert("Botão excluir acionado")
+        })
+    })
+
+    document.querySelectorAll(".btn-info").forEach((elemento)=>{
+        elemento.addEventListener("click", (evento)=>{
+            if(formAtualizar.classList.contains("d-none")){
+                formCadastrar.classList.replace("d-block", "d-none")
+                formAtualizar.classList.replace("d-none", "d-block")
+            }
+        })
+    })
 
 });
+
+}
+
+async function excluirTarefas(id){
+    let resultado = confirm("Tem certeza que deseja excluir?")
+    if(resultado){
+        await deleteDoc(doc(db, "tarefa", id));
+        alert("Tarefa excluída com sucesso")
+
+        consultarTarefa() // Recarregar os dados após excluir
+    }
+
 }
 
 btnTarefa.addEventListener("click", (evento)=>{
@@ -53,3 +85,9 @@ btnTarefa.addEventListener("click", (evento)=>{
     inserirTarefa()
     consultarTarefa()
 })
+
+btnAtualizar.addEventListener("click", ()=>{
+
+})
+
+consultarTarefa()
